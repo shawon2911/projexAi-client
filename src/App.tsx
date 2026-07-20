@@ -8,6 +8,7 @@ import DetailsPage from './pages/DetailsPage';
 // Assume you have or will make a basic LoginPage placeholder
 import LoginPage from './pages/LoginPage'; 
 import Footer from './components/Footer';
+import RegisterPage from './pages/RegisterPage';
 
 // A small layout wrapper that hides the footer on the /login path node
 function AppLayout({ children }: { children: React.ReactNode }) {
@@ -36,6 +37,7 @@ export default function App() {
           <Route path="/dashboard" element={<ManageProjectsPage />} />
           <Route path="/projects/:id" element={<DetailsPage />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
         </Routes>
       </AppLayout>
     </BrowserRouter>
