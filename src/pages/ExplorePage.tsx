@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import Navbar from '../components/Navbar';
 import { Search, SlidersHorizontal, Tag, DollarSign, ArrowUpRight, FolderOpen } from 'lucide-react';
 import { Link } from 'react-router-dom';

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import Navbar from '../components/Navbar';
 import { Briefcase, Trash2, Edit2, ShieldAlert, FileCode2, CheckCircle, Clock } from 'lucide-react';
 

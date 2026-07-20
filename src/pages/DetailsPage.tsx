@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useState } from 'react';
+import { useParams, Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import { ArrowLeft, DollarSign, Calendar, ShieldCheck, Cpu, Terminal, CheckCircle } from 'lucide-react';
 
 export default function DetailsPage() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   const [applied, setApplied] = useState(false);
 
   return (

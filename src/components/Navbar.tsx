@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { Link, useNavigate } from 'react-router-dom';
 import { useSession, signOut } from '../lib/auth-client';
 import { Terminal, LogOut, LayoutDashboard, Compass, PlusCircle, LogIn } from 'lucide-react';
