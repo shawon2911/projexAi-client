@@ -1,0 +1,28 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brandNavy: #0F172A;
+  --color-brandNavyLight: #1E293B;
+  --color-brandTeal: #14B8A6;
+  --color-brandCoral: #F43F5E;
+}
+
+body {
+  margin: 0;
+  background-color: #0F172A;
+  color: #F8FAFC;
+  font-family: system-ui, -apple-system, sans-serif;
+  overflow-x: hidden;
+}
+
+.velo-card {
+  background-color: #1E293B;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.velo-card:hover {
+  border-color: #14B8A6;
+  transform: translateY(-4px);
+}
