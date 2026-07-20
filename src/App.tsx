@@ -5,7 +5,7 @@ import { useSession } from './lib/auth-client';
 import ExplorePage from './pages/ExplorePage';
 import LoginPage from './pages/LoginPage';
 import AddProjectPage from './pages/AddProjectPage';
-// import ManageProjectsPage from './pages/ManageProjectsPage';
+import ManageProjectsPage from './pages/ManageProjectsPage';
 // import DetailsPage from './pages/DetailsPage';
 
 // Protected Route Guard driven by Better Auth session state
@@ -35,7 +35,8 @@ export default function App() {
         
         <Route path="/items/add" element={<ProtectedRoute><AddProjectPage /></ProtectedRoute>} />
         
-        {/* <Route path="/items/manage" element={<ProtectedRoute><ManageProjectsPage /></ProtectedRoute>} /> */}
+        <Route path="/items/manage" element={<ProtectedRoute><ManageProjectsPage /></ProtectedRoute>} />
+        
          
         
         <Route path="*" element={<Navigate to="/" replace />} />
