@@ -1,12 +1,13 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useSession } from './lib/auth-client';
- // import LandingPage from './pages/LandingPage';
+
 import ExplorePage from './pages/ExplorePage';
 import LoginPage from './pages/LoginPage';
 import AddProjectPage from './pages/AddProjectPage';
 import ManageProjectsPage from './pages/ManageProjectsPage';
-// import DetailsPage from './pages/DetailsPage';
+import DetailsPage from './pages/DetailsPage';
+import HomePage from './pages/HomePage';
 
 // Protected Route Guard driven by Better Auth session state
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -27,10 +28,10 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* <Route path="/" element={<LandingPage />} /> */}
+        <Route path="/" element={<HomePage />} />
         <Route path="/explore" element={<ExplorePage />} />
         <Route path="/login" element={<LoginPage />} />
-        {/* <Route path="/projects/:id" element={<DetailsPage />} /> */}
+        <Route path="/projects/:id" element={<DetailsPage />} />
         
         
         <Route path="/items/add" element={<ProtectedRoute><AddProjectPage /></ProtectedRoute>} />
