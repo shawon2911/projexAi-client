@@ -1,47 +1,43 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { useSession } from './lib/auth-client';
-
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import HomePage from './pages/HomePage';
 import ExplorePage from './pages/ExplorePage';
-import LoginPage from './pages/LoginPage';
 import AddProjectPage from './pages/AddProjectPage';
 import ManageProjectsPage from './pages/ManageProjectsPage';
 import DetailsPage from './pages/DetailsPage';
-import HomePage from './pages/HomePage';
+// Assume you have or will make a basic LoginPage placeholder
+import LoginPage from './pages/LoginPage'; 
+import Footer from './components/Footer';
 
-// Protected Route Guard driven by Better Auth session state
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { data: session, isPending } = useSession();
+// A small layout wrapper that hides the footer on the /login path node
+function AppLayout({ children }: { children: React.ReactNode }) {
+  const location = useLocation();
+  const isLoginPage = location.pathname === '/login';
 
-  if (isPending) {
-    return (
-      <div className="min-h-screen bg-brandNavy flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-brandTeal"></div>
+  return (
+    <div className="flex flex-col min-h-screen justify-between">
+      <div className="flex-grow">
+        {children}
       </div>
-    );
-  }
-
-  return session ? <>{children}</> : <Navigate to="/login" replace />;
-};
+      {/* Renders everywhere EXCEPT when the path exactly matches /login */}
+      {!isLoginPage && <Footer />}
+    </div>
+  );
+}
 
 export default function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/explore" element={<ExplorePage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/projects/:id" element={<DetailsPage />} />
-        
-        
-        <Route path="/items/add" element={<ProtectedRoute><AddProjectPage /></ProtectedRoute>} />
-        
-        <Route path="/items/manage" element={<ProtectedRoute><ManageProjectsPage /></ProtectedRoute>} />
-        
-         
-        
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      <AppLayout>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/explore" element={<ExplorePage />} />
+          <Route path="/items/add" element={<AddProjectPage />} />
+          <Route path="/dashboard" element={<ManageProjectsPage />} />
+          <Route path="/projects/:id" element={<DetailsPage />} />
+          <Route path="/login" element={<LoginPage />} />
+        </Routes>
+      </AppLayout>
     </BrowserRouter>
   );
 }
