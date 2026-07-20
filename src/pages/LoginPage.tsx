@@ -68,8 +68,9 @@ export default function LoginPage() {
           onError: (ctx) => setError(ctx.error.message || 'Invalid credentials.'),
         });
       }
-    } catch (err) {
-      setError('An unexpected structural network error occurred.', err);
+    } catch (error) {
+      setError('An unexpected structural network error occurred.' );
+      console.log(error)
     } finally {
       setLoading(false);
     }
