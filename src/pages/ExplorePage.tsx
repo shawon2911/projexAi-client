@@ -1,100 +1,210 @@
-import { useEffect, useState } from 'react';
-import { fetchProjects } from '../services/api';
+import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Search, DollarSign, Calendar, Briefcase, Loader2, ArrowRight } from 'lucide-react';
 
 interface Project {
   _id: string;
   title: string;
-  shortDescription: string;
   category: string;
+  shortDescription?: string;
+  description?: string;
+  fullDescription?: string;
   budget: number;
-  skills: string[];
+  deadline: string;
+  skills?: string[];
+  createdAt?: string;
 }
 
-export default function ExploreProjects() {
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const [category, setCategory] = useState('All');
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
-  const loadProjects = async () => {
-    setLoading(true);
-    try {
-      const data = await fetchProjects(search, category);
-      setProjects(data.projects || []);
-    } catch (err) {
-      console.error('Error fetching real data:', err);
-      setProjects([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+export const ExplorePage: React.FC = () => {
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Filter States
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('All');
 
   useEffect(() => {
-    loadProjects();
-  }, [search, category]);
+    const fetchAllProjects = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/projects`);
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || 'Failed to load projects');
+        }
+
+        // Response Array Validation
+        const projectList = Array.isArray(data) ? data : data.projects || [];
+        setProjects(projectList);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'Error fetching projects';
+        setError(msg);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAllProjects();
+  }, []);
+
+  // Filtered projects based on Search and Category
+  const filteredProjects = projects.filter((project) => {
+    const matchesSearch =
+      project.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (project.description && project.description.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (project.skills && project.skills.some((skill) => skill.toLowerCase().includes(searchQuery.toLowerCase())));
+
+    const matchesCategory =
+      selectedCategory === 'All' || project.category.toLowerCase() === selectedCategory.toLowerCase();
+
+    return matchesSearch && matchesCategory;
+  });
+
+  const categories = ['All', 'Web Development', 'Mobile App', 'AI / Machine Learning', 'UI/UX Design'];
+
+  if (loading) {
+    return (
+      <div className="min-h-[70vh] flex items-center justify-center bg-slate-950">
+        <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-      {/* Search & Filter Header */}
-      <div className="flex flex-col md:flex-row gap-4 mb-8 justify-between">
-        <input
-          type="text"
-          placeholder="Search projects..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="border p-3 rounded-lg w-full md:w-1/2 focus:outline-none focus:ring-2 focus:ring-sky-500"
-        />
-        <select
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-          className="border p-3 rounded-lg w-full md:w-1/4 bg-black"
-        >
-          <option value="All">All Categories</option>
-          <option value="Web Development">Web Development</option>
-          <option value="AI Integration">AI Integration</option>
-          <option value="Mobile App">Mobile App</option>
-        </select>
+    <div className="max-w-7xl mx-auto px-4 py-10">
+      {/* Page Header */}
+      <div className="text-center max-w-3xl mx-auto mb-10">
+        <h1 className="text-3xl md:text-4xl font-bold text-white mb-3">Explore Projects</h1>
+        <p className="text-slate-400 text-sm md:text-base">
+          Browse open client briefs, filter by technology or domain, and find your next opportunity.
+        </p>
       </div>
 
-      {/* Grid view - 3 Cards per row */}
-      {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[1, 2, 3].map((n) => (
-            <div key={n} className="h-64 bg-gray-200 animate-pulse rounded-xl"></div>
+      {/* Search & Category Filter Section */}
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 md:p-6 mb-8 shadow-xl space-y-4">
+        <div className="relative">
+          <Search className="absolute left-4 top-3.5 w-5 h-5 text-slate-500" />
+          <input
+            type="text"
+            placeholder="Search by title, description, or skills (e.g. React, Node)..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl pl-12 pr-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+          />
+        </div>
+
+        {/* Category Pills */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+          {categories.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setSelectedCategory(cat)}
+              className={`px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+                selectedCategory === cat
+                  ? 'bg-indigo-600 text-white shadow-lg'
+                  : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'
+              }`}
+            >
+              {cat}
+            </button>
           ))}
         </div>
-      ) : projects.length === 0 ? (
-        <div className="text-center py-12 text-gray-500">
-          No real projects found in MongoDB database. Be the first to post one!
+      </div>
+
+      {/* Error State */}
+      {error && (
+        <div className="bg-rose-500/10 border border-rose-500/20 text-rose-400 p-4 rounded-xl text-sm mb-6">
+          {error}
+        </div>
+      )}
+
+      {/* Empty State */}
+      {filteredProjects.length === 0 ? (
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-12 text-center space-y-4">
+          <Briefcase className="w-12 h-12 text-slate-600 mx-auto" />
+          <h3 className="text-lg font-semibold text-white">No projects found</h3>
+          <p className="text-slate-400 text-sm max-w-md mx-auto">
+            {searchQuery || selectedCategory !== 'All'
+              ? 'Try adjusting your search query or selected category.'
+              : 'There are no active projects listed at the moment.'}
+          </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {projects.map((item) => (
-            <div key={item._id} className="border rounded-xl p-5 shadow-sm hover:shadow-md transition flex flex-col justify-between">
-              <div>
-                <span className="text-xs font-semibold px-2.5 py-1 rounded bg-sky-100 text-sky-800">
-                  {item.category}
-                </span>
-                <h3 className="text-xl font-bold mt-3 text-gray-900">{item.title}</h3>
-                <p className="text-gray-600 text-sm mt-2">{item.shortDescription}</p>
-                <div className="flex flex-wrap gap-1 mt-3">
-                  {item.skills?.map((skill, i) => (
-                    <span key={i} className="text-xs bg-gray-100 px-2 py-0.5 rounded text-gray-600">
-                      {skill}
+        /* Projects Grid */
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredProjects.map((project) => {
+            const desc = project.shortDescription || project.description || project.fullDescription || '';
+
+            return (
+              <div
+                key={project._id}
+                className="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between hover:border-slate-700 transition-all shadow-lg hover:shadow-indigo-500/5 group"
+              >
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold px-3 py-1 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                      {project.category}
                     </span>
-                  ))}
+                  </div>
+
+                  <h2 className="text-lg font-bold text-white group-hover:text-indigo-400 transition-colors line-clamp-1">
+                    {project.title}
+                  </h2>
+
+                  <p className="text-slate-400 text-xs leading-relaxed line-clamp-3">
+                    {desc}
+                  </p>
+
+                  {/* Skills Tag List */}
+                  {project.skills && project.skills.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 pt-2">
+                      {project.skills.slice(0, 4).map((skill, idx) => (
+                        <span
+                          key={idx}
+                          className="text-[10px] bg-slate-800 text-slate-300 px-2.5 py-1 rounded-md border border-slate-700/60"
+                        >
+                          {skill}
+                        </span>
+                      ))}
+                      {project.skills.length > 4 && (
+                        <span className="text-[10px] bg-slate-800 text-slate-400 px-2 py-1 rounded-md">
+                          +{project.skills.length - 4}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <div className="pt-6 mt-6 border-t border-slate-800/80 space-y-4">
+                  <div className="flex items-center justify-between text-xs text-slate-400">
+                    <div className="flex items-center gap-1 font-bold text-white text-sm">
+                      <DollarSign className="w-4 h-4 text-emerald-400" />
+                      <span>${project.budget}</span>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 text-slate-400">
+                      <Calendar className="w-3.5 h-3.5 text-indigo-400" />
+                      <span>{new Date(project.deadline).toLocaleDateString()}</span>
+                    </div>
+                  </div>
+
+                  <Link
+                    to={`/projects/${project._id}`}
+                    className="w-full bg-slate-800 hover:bg-indigo-600 text-slate-200 hover:text-white font-medium py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 text-xs border border-slate-700 hover:border-indigo-500"
+                  >
+                    View Details & Apply <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
                 </div>
               </div>
-              <div className="mt-5 pt-4 border-t flex justify-between items-center">
-                <span className="font-bold text-lg text-emerald-600">${item.budget}</span>
-                <button className="bg-sky-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-sky-600">
-                  View Details
-                </button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
   );
-}
+};
+
+export default ExplorePage;

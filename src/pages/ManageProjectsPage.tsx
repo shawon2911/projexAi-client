@@ -1,174 +1,142 @@
-import { useState } from 'react';
-import Navbar from '../components/Navbar';
-import { Briefcase, Trash2, Edit2, ShieldAlert, FileCode2, CheckCircle, Clock } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Briefcase, Calendar, DollarSign, Plus, Loader2 } from 'lucide-react';
 
-// Type matching our project schema
-interface ManagedProject {
-  id: string;
+interface Project {
+  _id: string;
   title: string;
   category: string;
   budget: number;
-  status: 'Pending' | 'Active' | 'Completed';
-  dateCreated: string;
+  deadline: string;
+  status?: string;
+  createdAt?: string;
 }
 
-// Initial administrative project mock nodes
-const INITIAL_MANAGED: ManagedProject[] = [
-  {
-    id: "node-841",
-    title: "Build Autonomous Market Analysis Pipeline",
-    category: "AI Agent Development",
-    budget: 2450,
-    status: "Active",
-    dateCreated: "2026-07-10"
-  },
-  {
-    id: "node-209",
-    title: "Vite + Tailwind v4 Optimization Audit",
-    category: "Frontend Architecture",
-    budget: 850,
-    status: "Pending",
-    dateCreated: "2026-07-18"
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+
+export const ManageProjectsPage: React.FC = () => {
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchMyProjects = async () => {
+      const token = localStorage.getItem('token') || localStorage.getItem('userToken');
+
+      if (!token) {
+        setError('Authorization token missing! Please log in.');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        // 📡 ব্যাকএন্ডের /projects/my-projects বা /projects পয়েন্টে কল
+        const response = await fetch(`${API_BASE_URL}/projects/my-projects`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || 'Failed to fetch your projects.');
+        }
+
+        // Response Array check
+        setProjects(Array.isArray(data) ? data : data.projects || []);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'Error fetching projects.';
+        setError(msg);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMyProjects();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-950">
+        <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
+      </div>
+    );
   }
-];
-
-export default function ManageProjectsPage() {
-  const [projects, setProjects] = useState<ManagedProject[]>(INITIAL_MANAGED);
-  const [showNotification, setShowNotification] = useState(false);
-
-  // Administrative action to slice the array state
-  const handleDeleteNode = (id: string) => {
-    setProjects(prev => prev.filter(p => p.id !== id));
-    setShowNotification(true);
-    setTimeout(() => setShowNotification(false), 2000);
-  };
 
   return (
-    <div className="min-h-screen bg-brandNavy">
-      <Navbar />
-
-      <main className="max-w-6xl mx-auto px-6 py-12">
-        
-        {/* Dashboard Title Metrics Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-slate-800 pb-6 mb-8">
-          <div>
-            <h1 className="text-2xl font-extrabold text-white tracking-tight">Console Command</h1>
-            <p className="text-slate-400 text-xs mt-1">Manage, update, or purge operational briefs deployed by your profile.</p>
-          </div>
-          
-          <div className="flex gap-4 text-xs font-mono">
-            <div className="bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 text-slate-300">
-              Total Nodes: <span className="text-brandTeal font-bold">{projects.length}</span>
-            </div>
-            <div className="bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 text-slate-300">
-              Funding Escrow: <span className="text-brandCoral font-bold">${projects.reduce((acc, curr) => acc + curr.budget, 0)}</span>
-            </div>
-          </div>
+    <div className="max-w-6xl mx-auto px-4 py-10">
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold text-white">My Posted Projects</h1>
+          <p className="text-slate-400 text-sm mt-1">
+            Manage your project listings and view incoming proposals.
+          </p>
         </div>
 
-        {/* Dynamic State Alert Notification */}
-        {showNotification && (
-          <div className="mb-6 p-3 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-mono rounded-xl flex items-center gap-2 animate-fade-in">
-            <ShieldAlert className="w-4 h-4 text-rose-400 shrink-0" /> WARNING: Project brief removed from local runtime cache.
-          </div>
-        )}
+        <Link
+          to="/items/add"
+          className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-all shadow-lg"
+        >
+          <Plus className="w-4 h-4" /> Post New Project
+        </Link>
+      </div>
 
-        {/* Managed Elements Data Grid Display */}
-        {projects.length > 0 ? (
-          <div className="bg-brandNavyLight border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-slate-800 bg-slate-900/60 text-[10px] font-mono uppercase tracking-wider text-slate-400">
-                    <th className="py-4 px-6">Brief Descriptor</th>
-                    <th className="py-4 px-6">Framework System</th>
-                    <th className="py-4 px-6">Status Marker</th>
-                    <th className="py-4 px-6">Budget Pool</th>
-                    <th className="py-4 px-6 text-right">Operational Overrides</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-800/60 text-sm text-slate-300">
-                  {projects.map((project) => (
-                    <tr key={project.id} className="hover:bg-slate-900/30 transition-colors">
-                      
-                      {/* Title + Identification Column */}
-                      <td className="py-4 px-6">
-                        <div className="flex items-center gap-3">
-                          <FileCode2 className="w-5 h-5 text-brandTeal/70 shrink-0" />
-                          <div>
-                            <p className="font-bold text-white text-sm leading-tight line-clamp-1">{project.title}</p>
-                            <p className="text-[10px] font-mono text-slate-500 mt-0.5">ID Ref: {project.id} • Created: {project.dateCreated}</p>
-                          </div>
-                        </div>
-                      </td>
+      {error && (
+        <div className="bg-rose-500/10 border border-rose-500/20 text-rose-400 p-4 rounded-xl text-sm mb-6">
+          {error}
+        </div>
+      )}
 
-                      {/* Framework Strategy Tag */}
-                      <td className="py-4 px-6 whitespace-nowrap">
-                        <span className="text-[11px] font-mono bg-slate-800/80 text-slate-300 px-2 py-0.5 rounded border border-slate-700/60">
-                          {project.category}
-                        </span>
-                      </td>
+      {projects.length === 0 ? (
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-10 text-center space-y-4">
+          <Briefcase className="w-12 h-12 text-slate-600 mx-auto" />
+          <h3 className="text-lg font-semibold text-white">No projects posted yet</h3>
+          <p className="text-slate-400 text-sm max-w-md mx-auto">
+            You haven't created any projects under this account. Click below to create your first brief.
+          </p>
+          <Link
+            to="/items/add"
+            className="inline-flex items-center gap-2 bg-indigo-600 text-white text-sm font-medium px-4 py-2 rounded-xl"
+          >
+            Create Project
+          </Link>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {projects.map((project) => (
+            <div
+              key={project._id}
+              className="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between hover:border-slate-700 transition-all shadow-lg"
+            >
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold px-3 py-1 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                    {project.category}
+                  </span>
+                  <span className="text-xs text-emerald-400 font-medium capitalize bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
+                    {project.status || 'open'}
+                  </span>
+                </div>
 
-                      {/* Status Badging Row */}
-                      <td className="py-4 px-6 whitespace-nowrap">
-                        {project.status === 'Active' && (
-                          <span className="flex items-center gap-1 text-[11px] text-emerald-400 font-medium">
-                            <CheckCircle className="w-3.5 h-3.5" /> Core Running
-                          </span>
-                        )}
-                        {project.status === 'Pending' && (
-                          <span className="flex items-center gap-1 text-[11px] text-amber-400 font-medium">
-                            <Clock className="w-3.5 h-3.5" /> Queue Stage
-                          </span>
-                        )}
-                        {project.status === 'Completed' && (
-                          <span className="flex items-center gap-1 text-[11px] text-blue-400 font-medium">
-                            <CheckCircle className="w-3.5 h-3.5" /> Executed
-                          </span>
-                        )}
-                      </td>
+                <h2 className="text-lg font-bold text-white line-clamp-1">{project.title}</h2>
+              </div>
 
-                      {/* Financial Metrics */}
-                      <td className="py-4 px-6 whitespace-nowrap font-mono text-white font-semibold">
-                        ${project.budget.toLocaleString()}
-                      </td>
+              <div className="pt-6 mt-6 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
+                <div className="flex items-center gap-1 font-semibold text-slate-200">
+                  <DollarSign className="w-4 h-4 text-emerald-400" />
+                  <span>${project.budget}</span>
+                </div>
 
-                      {/* Administrative Option Button Groups */}
-                      <td className="py-4 px-6 text-right whitespace-nowrap">
-                        <div className="flex items-center justify-end gap-2">
-                          <button 
-                            title="Edit project parameters"
-                            className="p-1.5 hover:bg-slate-800 text-slate-400 hover:text-brandTeal rounded-lg transition-colors cursor-pointer"
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </button>
-                          <button 
-                            onClick={() => handleDeleteNode(project.id)}
-                            title="Purge project from ledger"
-                            className="p-1.5 hover:bg-rose-950/40 text-slate-400 hover:text-rose-400 rounded-lg transition-colors cursor-pointer"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </td>
-
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                <div className="flex items-center gap-1">
+                  <Calendar className="w-3.5 h-3.5" />
+                  <span>{new Date(project.deadline).toLocaleDateString()}</span>
+                </div>
+              </div>
             </div>
-          </div>
-        ) : (
-          
-          /* Empty Administrative Log State Block */
-          <div className="text-center py-20 bg-brandNavyLight/20 border border-dashed border-slate-800 rounded-2xl max-w-xl mx-auto">
-            <Briefcase className="w-10 h-10 text-slate-600 mx-auto mb-3" />
-            <h3 className="text-sm font-bold text-slate-400">No Projects Registered Under Credentials</h3>
-            <p className="text-slate-500 text-xs mt-0.5">Deploy new job descriptions via the input pipeline interface module.</p>
-          </div>
-        )}
-
-      </main>
+          ))}
+        </div>
+      )}
     </div>
   );
-}
+};
