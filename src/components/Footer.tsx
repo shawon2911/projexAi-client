@@ -13,7 +13,7 @@ export default function Footer() {
         <div className="md:col-span-2 space-y-3">
           <div className="flex items-center gap-2 text-white font-black tracking-tight">
             <Terminal className="w-5 h-5 text-brandTeal" />
-            <span>SWARM<span className="text-brandTeal">GRID</span></span>
+            <span>PROJEX<span className="text-teal-400">AI</span></span>
           </div>
           <p className="text-xs text-slate-500 max-w-sm leading-relaxed">
             Decentralized computational pipeline triaging structured project briefs to automated execution runtimes. Engineered with strict end-to-end performance parameters.

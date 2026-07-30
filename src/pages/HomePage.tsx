@@ -1,6 +1,6 @@
 
 import { Link } from 'react-router-dom';
-import Navbar from '../components/Navbar';
+
 import { 
   Terminal, ShieldCheck, Cpu, Layers, 
   ArrowRight, Zap, Database, Code2, CheckCircle2 
@@ -9,7 +9,7 @@ import {
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-brandNavy text-slate-100 selection:bg-brandTeal selection:text-brandNavy">
-      <Navbar />
+      
 
       {/* SECTION 1: HERO CONTAINER */}
       <header className="relative overflow-hidden border-b border-slate-850 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-brandNavyLight via-brandNavy to-brandNavy py-24 lg:py-32">

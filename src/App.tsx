@@ -1,27 +1,34 @@
-import React from 'react';
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
-import HomePage from './pages/HomePage';
-import ExplorePage from './pages/ExplorePage';
-import AddProjectPage from './pages/AddProjectPage';
-import ManageProjectsPage from './pages/ManageProjectsPage';
-import DetailsPage from './pages/DetailsPage';
-// Assume you have or will make a basic LoginPage placeholder
-import LoginPage from './pages/LoginPage'; 
-import Footer from './components/Footer';
-import RegisterPage from './pages/RegisterPage';
+import React from "react";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import HomePage from "./pages/HomePage";
+import ExplorePage from "./pages/ExplorePage";
+import AddProjectPage from "./pages/AddProjectPage";
+import ManageProjectsPage from "./pages/ManageProjectsPage";
+import DetailsPage from "./pages/DetailsPage";
+import LoginPage from "./pages/LoginPage";
+import RegisterPage from "./pages/RegisterPage";
+import MyBids from "./pages/MyBids";
+import DevWorkspace from "./pages/DevWorkspace";
 
-// A small layout wrapper that hides the footer on the /login path node
+import Footer from "./components/Footer";
+import Navbar from "./components/Navbar"; 
+
+// Navigation and Layout Wrapper
 function AppLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
-  const isLoginPage = location.pathname === '/login';
+  
+  
+  const isAuthPage = location.pathname === "/login" || location.pathname === "/register";
 
   return (
     <div className="flex flex-col min-h-screen justify-between">
-      <div className="flex-grow">
-        {children}
-      </div>
-      {/* Renders everywhere EXCEPT when the path exactly matches /login */}
-      {!isLoginPage && <Footer />}
+      
+      {!isAuthPage && <Navbar />}
+
+      <div className="flex-grow">{children}</div>
+
+      
+      {!isAuthPage && <Footer />}
     </div>
   );
 }
@@ -38,6 +45,8 @@ export default function App() {
           <Route path="/projects/:id" element={<DetailsPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/my-bids" element={<MyBids />} />
+          <Route path="/workspace" element={<DevWorkspace />} />
         </Routes>
       </AppLayout>
     </BrowserRouter>
