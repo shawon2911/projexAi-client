@@ -11,7 +11,7 @@ export default function DevWorkspace() {
         </div>
         <Link 
           to="/items/add" 
-          className="bg-sky-500 hover:bg-sky-600 text-white font-medium px-4 py-2 rounded-lg text-sm transition"
+          className="bg-brandTeal hover:bg-teal-400 text-brandNavy font-medium px-4 py-2 rounded-lg text-sm transition"
         >
           + Deploy New Brief
         </Link>

@@ -1,16 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Briefcase, Calendar, DollarSign, Plus, Loader2 } from 'lucide-react';
-
-interface Project {
-  _id: string;
-  title: string;
-  category: string;
-  budget: number;
-  deadline: string;
-  status?: string;
-  createdAt?: string;
-}
+import { Briefcase, Plus, Loader2 } from 'lucide-react';
+import { ProjectCard, type Project } from '../components/ProjectCard'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
@@ -21,6 +12,7 @@ export const ManageProjectsPage: React.FC = () => {
 
   useEffect(() => {
     const fetchMyProjects = async () => {
+      // 🔑 localStorage থেকে সব সম্ভাব্য Token Key চেক করা
       const token = localStorage.getItem('token') || localStorage.getItem('userToken');
 
       if (!token) {
@@ -30,9 +22,12 @@ export const ManageProjectsPage: React.FC = () => {
       }
 
       try {
-        // 📡 ব্যাকএন্ডের /projects/my-projects বা /projects পয়েন্টে কল
-        const response = await fetch(`${API_BASE_URL}/projects/my-projects`, {
+        // API Base URL Safe Formatting
+        const baseUrl = API_BASE_URL.endsWith('/api') ? API_BASE_URL : `${API_BASE_URL}/api`;
+
+        const response = await fetch(`${baseUrl}/projects/my-projects`, {
           headers: {
+            'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
           },
         });
@@ -43,8 +38,16 @@ export const ManageProjectsPage: React.FC = () => {
           throw new Error(data.message || 'Failed to fetch your projects.');
         }
 
-        // Response Array check
-        setProjects(Array.isArray(data) ? data : data.projects || []);
+        // 💡 Data extraction with multi-fallback checks
+        if (Array.isArray(data)) {
+          setProjects(data);
+        } else if (data.projects && Array.isArray(data.projects)) {
+          setProjects(data.projects);
+        } else if (data.data && Array.isArray(data.data)) {
+          setProjects(data.data);
+        } else {
+          setProjects([]);
+        }
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'Error fetching projects.';
         setError(msg);
@@ -66,6 +69,7 @@ export const ManageProjectsPage: React.FC = () => {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-10">
+      {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-white">My Posted Projects</h1>
@@ -76,18 +80,20 @@ export const ManageProjectsPage: React.FC = () => {
 
         <Link
           to="/items/add"
-          className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-all shadow-lg"
+          className="flex items-center gap-2 bg-brandTeal hover:bg-teal-400 text-brandNavy text-sm font-semibold px-4 py-2.5 rounded-xl transition-all shadow-lg"
         >
           <Plus className="w-4 h-4" /> Post New Project
         </Link>
       </div>
 
+      {/* Error Banner */}
       {error && (
         <div className="bg-rose-500/10 border border-rose-500/20 text-rose-400 p-4 rounded-xl text-sm mb-6">
           {error}
         </div>
       )}
 
+      {/* Project List / Empty State */}
       {projects.length === 0 ? (
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-10 text-center space-y-4">
           <Briefcase className="w-12 h-12 text-slate-600 mx-auto" />
@@ -97,43 +103,23 @@ export const ManageProjectsPage: React.FC = () => {
           </p>
           <Link
             to="/items/add"
-            className="inline-flex items-center gap-2 bg-indigo-600 text-white text-sm font-medium px-4 py-2 rounded-xl"
+            className="inline-flex items-center gap-2 bg-brandTeal hover:bg-teal-400 text-brandNavy text-sm font-medium px-4 py-2 rounded-xl"
           >
             Create Project
           </Link>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {projects.map((project) => (
-            <div
-              key={project._id}
-              className="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between hover:border-slate-700 transition-all shadow-lg"
-            >
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold px-3 py-1 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
-                    {project.category}
-                  </span>
-                  <span className="text-xs text-emerald-400 font-medium capitalize bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
-                    {project.status || 'open'}
-                  </span>
-                </div>
-
-                <h2 className="text-lg font-bold text-white line-clamp-1">{project.title}</h2>
-              </div>
-
-              <div className="pt-6 mt-6 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
-                <div className="flex items-center gap-1 font-semibold text-slate-200">
-                  <DollarSign className="w-4 h-4 text-emerald-400" />
-                  <span>${project.budget}</span>
-                </div>
-
-                <div className="flex items-center gap-1">
-                  <Calendar className="w-3.5 h-3.5" />
-                  <span>{new Date(project.deadline).toLocaleDateString()}</span>
-                </div>
-              </div>
-            </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {projects.map((proj) => (
+            <ProjectCard 
+              key={proj._id} 
+              project={{
+                ...proj,
+                // Safe date formatting check to prevent rendering crash
+                deadline: proj.deadline ? proj.deadline : new Date().toISOString()
+              }} 
+              showStatus={true} 
+            />
           ))}
         </div>
       )}

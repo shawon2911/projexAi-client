@@ -201,7 +201,7 @@ export default function HomePage() {
             Connect your credentials, publish requirements, and run execution blocks inside the decentralised processing swarm.
           </p>
           <div className="mt-8">
-            <Link to="/explore" className="inline-block bg-white hover:bg-slate-100 text-brandNavy font-extrabold px-6 py-3 rounded-xl text-xs transition-transform transform hover:-translate-y-0.5 shadow-md">
+            <Link to="/explore" className="inline-block bg-brandTeal hover:bg-teal-400 text-brandNavy font-extrabold px-6 py-3 rounded-xl text-xs transition-transform transform hover:-translate-y-0.5 shadow-md">
               Launch Workspace Ledger
             </Link>
           </div>

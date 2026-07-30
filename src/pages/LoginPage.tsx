@@ -11,7 +11,9 @@ export default function LoginPage() {
 
   const navigate = useNavigate();
 
-  const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+  // ✅ 1. API Base URL safety fix (Ensure /api prefix)
+  const envBase = (import.meta as unknown as { env?: { VITE_API_BASE_URL?: string } }).env?.VITE_API_BASE_URL || 'http://localhost:5000/api';
+  const API_BASE = envBase.endsWith('/api') ? envBase : `${envBase}/api`;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,23 +21,28 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-     // Replace your login post line exactly with this:
-const response = await axios.post(`${API_BASE}/auth/register`, {
-  email,
-  password
-});
+      // ✅ 2. Clean endpoint hit: http://localhost:5000/api/auth/login
+      const response = await axios.post(`${API_BASE}/auth/login`, {
+        email,
+        password
+      });
 
-      // 2. Commit the active verification token and user profile structure directly to storage
+      // Save credentials
       localStorage.setItem("token", response.data.token);
       localStorage.setItem("user", JSON.stringify(response.data.user));
 
-      // 3. Forward the initialized credentials node safely to the application dashboard console
-      navigate("/dashboard");
-    } catch (err: any) {
-      setError(
-        err.response?.data?.message ||
-          "Authorization failed. Credentials matrix mismatch.",
-      );
+      // Navigate to explore/dashboard
+      navigate("/explore");
+    } catch (err: unknown) {
+      // ✅ 3. Extract exact error message from Axios Response
+      if (axios.isAxiosError(err)) {
+        const backendMessage = err.response?.data?.message || err.response?.data?.error;
+        setError(backendMessage || "Invalid email or password.");
+      } else if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("An unexpected error occurred during login.");
+      }
     } finally {
       setLoading(false);
     }
@@ -102,7 +109,6 @@ const response = await axios.post(`${API_BASE}/auth/register`, {
           </button>
         </form>
 
-        {/* REDIRECTION UPDATE SPECIFICALLY FOR THE NEW REGISTER PAGE */}
         <p className="text-center text-xs text-slate-500 mt-6">
           New node operator?{" "}
           <Link

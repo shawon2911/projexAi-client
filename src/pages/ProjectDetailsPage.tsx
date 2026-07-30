@@ -65,7 +65,7 @@ export const ProjectDetailsPage: React.FC = () => {
     fetchProjectDetails();
   }, [id]);
 
-  const handleProposalSubmit = async (e: React.FormEvent) => {
+const handleProposalSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!token) {
       alert('Please log in to submit a proposal.');
@@ -77,8 +77,15 @@ export const ProjectDetailsPage: React.FC = () => {
     setSubmitSuccess(null);
     setError(null);
 
+    // ✅ LocalStorage থেকে লগইন করা ইউজারের ID বের করে নিয়ে আসা
+    const storedUser = localStorage.getItem('user');
+    const user = storedUser ? JSON.parse(storedUser) : null;
+
+    // ✅ API Base URL Safe Check
+    const baseUrl = API_BASE_URL.endsWith('/api') ? API_BASE_URL : `${API_BASE_URL}/api`;
+
     try {
-      const response = await fetch(`${API_BASE_URL}/bids`, {
+      const response = await fetch(`${baseUrl}/bids`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -86,9 +93,10 @@ export const ProjectDetailsPage: React.FC = () => {
         },
         body: JSON.stringify({
           projectId: id,
-          bidAmount: Number(bidAmount),
+          amount: Number(bidAmount),
+          proposal: coverLetter,
           deliveryDays: Number(deliveryDays),
-          coverLetter,
+          freelancerId: user?._id || user?.id, // 👈 এখানে user এর ID পাস করা হচ্ছে
         }),
       });
 
@@ -100,6 +108,8 @@ export const ProjectDetailsPage: React.FC = () => {
 
       setSubmitSuccess('🎉 Proposal submitted successfully!');
       setCoverLetter('');
+      setBidAmount('');
+      setDeliveryDays('');
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);

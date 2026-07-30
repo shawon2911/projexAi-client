@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Sparkles, Loader2, ArrowRight } from 'lucide-react';
 
 interface ProjectFormData {
@@ -8,7 +9,7 @@ interface ProjectFormData {
   fullDescription: string;
   budget: string;
   deadline: string;
-  skills: string; // Added to prevent undefined split error
+  skills: string;
 }
 
 interface ApiResponse {
@@ -17,9 +18,13 @@ interface ApiResponse {
   message?: string;
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+const RAW_API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+// Safe URL formatter - redundant /api prevent করার জন্য
+const API_BASE_URL = RAW_API_URL.endsWith('/api') ? RAW_API_URL : `${RAW_API_URL}/api`;
 
 export const AddProjectPage: React.FC = () => {
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState<ProjectFormData>({
     title: '',
     category: 'Web Development',
@@ -27,7 +32,7 @@ export const AddProjectPage: React.FC = () => {
     fullDescription: '',
     budget: '',
     deadline: '',
-    skills: '', // default empty string
+    skills: '',
   });
 
   const [isGeneratingAi, setIsGeneratingAi] = useState<boolean>(false);
@@ -81,7 +86,7 @@ export const AddProjectPage: React.FC = () => {
       const errorMessage =
         err instanceof Error ? err.message : 'Something went wrong with AI generation.';
       setAiError(errorMessage);
-    } finally {
+    }  finally {
       setIsGeneratingAi(false);
     }
   };
@@ -90,16 +95,23 @@ export const AddProjectPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
 
+    // LocalStorage থেকে Auth Token চেক
     const token = localStorage.getItem('token') || localStorage.getItem('userToken');
 
     if (!token) {
       alert('You are not authorized! Please log in first to post a project.');
+      navigate('/login');
       return;
     }
 
     setIsSubmitting(true);
 
-    // 💡 Safe Payload Construction
+    // 💡 Safe Skills Array & String split handling
+    const skillsArray = formData.skills
+      ? formData.skills.split(',').map((s) => s.trim()).filter(Boolean)
+      : [];
+
+    // Safe Payload
     const payload = {
       title: formData.title,
       category: formData.category,
@@ -108,9 +120,9 @@ export const AddProjectPage: React.FC = () => {
       fullDescription: formData.fullDescription,
       budget: Number(formData.budget),
       deadline: formData.deadline,
-      skills: formData.skills || '', // Ensures string is sent, avoiding undefined.split()
-      tags: '',
-      requirements: '',
+      skills: skillsArray, // String array for clean MongoDB integration
+      tags: skillsArray,
+      requirements: formData.fullDescription,
     };
 
     try {
@@ -118,7 +130,7 @@ export const AddProjectPage: React.FC = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${token}`, // Authorization header pass
         },
         body: JSON.stringify(payload),
       });
@@ -132,16 +144,8 @@ export const AddProjectPage: React.FC = () => {
 
       alert('🎉 Project posted successfully!');
 
-      // Form reset
-      setFormData({
-        title: '',
-        category: 'Web Development',
-        shortDescription: '',
-        fullDescription: '',
-        budget: '',
-        deadline: '',
-        skills: '',
-      });
+      // Redirect to Manage / My Projects page
+      navigate('/my-projects');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to create project.';
       alert(`Error: ${errorMessage}`);
@@ -203,7 +207,7 @@ export const AddProjectPage: React.FC = () => {
             />
           </div>
 
-          {/* Required Skills (Comma separated) */}
+          {/* Required Skills */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-slate-300">Required Skills (Comma-separated)</label>
             <input
@@ -224,7 +228,7 @@ export const AddProjectPage: React.FC = () => {
                 type="button"
                 onClick={handleGenerateAiScope}
                 disabled={isGeneratingAi}
-                className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-all disabled:opacity-50"
+                className="flex items-center gap-2 bg-brandTeal hover:bg-teal-400 text-brandNavy text-xs font-semibold px-3 py-1.5 rounded-lg transition-all disabled:opacity-50 cursor-pointer"
               >
                 {isGeneratingAi ? (
                   <>
@@ -285,7 +289,7 @@ export const AddProjectPage: React.FC = () => {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3.5 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg disabled:opacity-50 cursor-pointer"
+            className="w-full bg-brandTeal hover:bg-teal-400 text-brandNavy font-semibold py-3.5 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg disabled:opacity-50 cursor-pointer"
           >
             {isSubmitting ? (
               <Loader2 className="w-5 h-5 animate-spin" />

@@ -96,7 +96,7 @@ export const Chatbot: React.FC = () => {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="bg-indigo-600 hover:bg-indigo-700 text-white p-4 rounded-full shadow-2xl transition-all duration-300 flex items-center gap-2 group hover:scale-105"
+          className="bg-brandTeal hover:bg-teal-400 text-brandNavy p-4 rounded-full shadow-2xl transition-all duration-300 flex items-center gap-2 group hover:scale-105"
         >
           <Sparkles className="w-6 h-6 animate-pulse text-amber-300" />
           <span className="font-semibold pr-1 hidden sm:inline">ProjexBot AI</span>

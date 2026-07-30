@@ -104,7 +104,7 @@ export const ExplorePage: React.FC = () => {
               onClick={() => setSelectedCategory(cat)}
               className={`px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
                 selectedCategory === cat
-                  ? 'bg-indigo-600 text-white shadow-lg'
+                  ? 'bg-brandTeal hover:bg-teal-400 text-brandNavy  shadow-lg'
                   : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'
               }`}
             >
