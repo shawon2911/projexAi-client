@@ -32,7 +32,7 @@ export default function LoginPage() {
       localStorage.setItem("user", JSON.stringify(response.data.user));
 
       // Navigate to explore/dashboard
-      navigate("/explore");
+      navigate("/");
     } catch (err: unknown) {
       // ✅ 3. Extract exact error message from Axios Response
       if (axios.isAxiosError(err)) {
