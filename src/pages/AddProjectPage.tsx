@@ -1,217 +1,302 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import Navbar from '../components/Navbar';
-import { PlusCircle, DollarSign, Calendar, FileText, Sparkles, Loader2, ArrowLeft } from 'lucide-react';
+import { Sparkles, Loader2, ArrowRight } from 'lucide-react';
 
-export default function AddProjectPage() {
-  const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
+interface ProjectFormData {
+  title: string;
+  category: string;
+  shortDescription: string;
+  fullDescription: string;
+  budget: string;
+  deadline: string;
+  skills: string; // Added to prevent undefined split error
+}
 
-  // Form Parameters State
-  const [formData, setFormData] = useState({
+interface ApiResponse {
+  success?: boolean;
+  generatedDescription?: string;
+  message?: string;
+}
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+
+export const AddProjectPage: React.FC = () => {
+  const [formData, setFormData] = useState<ProjectFormData>({
     title: '',
-    clientName: '',
+    category: 'Web Development',
     shortDescription: '',
     fullDescription: '',
     budget: '',
     deadline: '',
-    category: 'AI Agent Development'
+    skills: '', // default empty string
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  const [isGeneratingAi, setIsGeneratingAi] = useState<boolean>(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+
+  // Input change handler
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ): void => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Helper to instantly load placeholder data for grading/testing demo runs
-  const handleDemoPopulate = () => {
-    setFormData({
-      title: "Enterprise Multi-Agent Customer Routing System",
-      clientName: "Stellar Labs Inc.",
-      shortDescription: "Design a LangGraph agent cluster to triage multi-channel support tickets.",
-      fullDescription: "We need an engineer to configure a production routing matrix. The deployment needs to evaluate natural language incoming inputs, query vector datastores for matching internal context manuals, and safely assign high-priority threads to live support pools.",
-      budget: "4500",
-      deadline: "2026-09-30",
-      category: "AI Agent Development"
-    });
+  // AI Scope Generator
+  const handleGenerateAiScope = async (): Promise<void> => {
+    if (!formData.title.trim() && !formData.shortDescription.trim()) {
+      setAiError('Please enter a Project Title or Short Summary first!');
+      return;
+    }
+
+    setIsGeneratingAi(true);
+    setAiError(null);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/ai/generate-description`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: formData.title,
+          category: formData.category,
+          shortDescription: formData.shortDescription,
+        }),
+      });
+
+      const data = (await response.json()) as ApiResponse;
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to generate AI scope');
+      }
+
+      if (data.generatedDescription) {
+        setFormData((prev) => ({
+          ...prev,
+          fullDescription: data.generatedDescription || '',
+        }));
+      }
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : 'Something went wrong with AI generation.';
+      setAiError(errorMessage);
+    } finally {
+      setIsGeneratingAi(false);
+    }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Form Submit Handler
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
-    setLoading(true);
 
-    // Mock network transmission buffer delay before moving back to dashboard matrix
-    setTimeout(() => {
-      setLoading(false);
-      setSuccess(true);
-      setTimeout(() => {
-        navigate('/explore');
-      }, 1200);
-    }, 1500);
+    const token = localStorage.getItem('token') || localStorage.getItem('userToken');
+
+    if (!token) {
+      alert('You are not authorized! Please log in first to post a project.');
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    // 💡 Safe Payload Construction
+    const payload = {
+      title: formData.title,
+      category: formData.category,
+      shortDescription: formData.shortDescription,
+      description: formData.fullDescription,
+      fullDescription: formData.fullDescription,
+      budget: Number(formData.budget),
+      deadline: formData.deadline,
+      skills: formData.skills || '', // Ensures string is sent, avoiding undefined.split()
+      tags: '',
+      requirements: '',
+    };
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/projects`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = (await response.json()) as ApiResponse;
+
+      if (!response.ok) {
+        console.error('Backend Error Details:', data);
+        throw new Error(data.message || 'Failed to post project');
+      }
+
+      alert('🎉 Project posted successfully!');
+
+      // Form reset
+      setFormData({
+        title: '',
+        category: 'Web Development',
+        shortDescription: '',
+        fullDescription: '',
+        budget: '',
+        deadline: '',
+        skills: '',
+      });
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to create project.';
+      alert(`Error: ${errorMessage}`);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-brandNavy">
-      <Navbar />
+    <div className="max-w-4xl mx-auto px-4 py-10">
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 md:p-10 shadow-xl">
+        <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">Create New Project</h1>
+        <p className="text-slate-400 text-sm mb-8">
+          Fill out the details below to post your project and receive proposals.
+        </p>
 
-      <main className="max-w-3xl mx-auto px-6 py-12">
-        
-        {/* Navigation Breadcrumb */}
-        <button 
-          onClick={() => navigate('/explore')}
-          className="flex items-center gap-1 text-xs text-slate-400 hover:text-brandTeal mb-6 font-mono cursor-pointer transition-colors"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" /> Return to Matrix
-        </button>
-
-        {/* Page Heading */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-6 mb-8">
-          <div>
-            <h1 className="text-2xl font-extrabold text-white tracking-tight">Deploy Brief Node</h1>
-            <p className="text-slate-400 text-xs mt-1">Map operational parameters to structure a new active workspace.</p>
-          </div>
-          
-          <button
-            type="button"
-            onClick={handleDemoPopulate}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-brandTeal text-xs font-mono font-medium rounded-lg shadow transition-colors cursor-pointer self-start sm:self-auto"
-          >
-            <Sparkles className="w-3.5 h-3.5" /> Auto-Fill Data
-          </button>
-        </div>
-
-        {/* Status Alerts */}
-        {success && (
-          <div className="mb-6 p-4 bg-teal-500/10 border border-teal-500/20 text-brandTeal text-sm font-medium rounded-xl">
-            ✓ Project node established successfully! Synchronizing system view...
-          </div>
-        )}
-
-        {/* Workspace Form Initialization */}
-        <form onSubmit={handleSubmit} className="space-y-6 bg-brandNavyLight border border-slate-800 rounded-2xl p-6 md:p-8 shadow-xl">
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5 font-mono">Project Title</label>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Title & Category */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="md:col-span-2 space-y-2">
+              <label className="text-sm font-medium text-slate-300">Project Title</label>
               <input
                 type="text"
                 name="title"
-                required
                 value={formData.title}
                 onChange={handleChange}
-                placeholder="e.g., Vector Optimization Engine"
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl py-2.5 px-4 text-sm text-white focus:outline-none focus:border-brandTeal transition-colors"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5 font-mono">Client Label / Entity</label>
-              <input
-                type="text"
-                name="clientName"
+                placeholder="e.g. Build an E-commerce Mobile App"
                 required
-                value={formData.clientName}
-                onChange={handleChange}
-                placeholder="e.g., Apex Systems LLC"
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl py-2.5 px-4 text-sm text-white focus:outline-none focus:border-brandTeal transition-colors"
+                className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
               />
             </div>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5 font-mono">Framework Strategy</label>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-300">Category</label>
               <select
                 name="category"
                 value={formData.category}
                 onChange={handleChange}
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl py-2.5 px-4 text-sm text-white focus:outline-none focus:border-brandTeal transition-colors appearance-none cursor-pointer"
+                className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
               >
-                <option value="AI Agent Development">AI Agent Development</option>
-                <option value="Frontend Architecture">Frontend Architecture</option>
-                <option value="Cybersecurity & Backend">Cybersecurity & Backend</option>
+                <option value="Web Development">Web Development</option>
+                <option value="Mobile App">Mobile App</option>
+                <option value="AI / Machine Learning">AI / Machine Learning</option>
+                <option value="UI/UX Design">UI/UX Design</option>
               </select>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5 font-mono">Funding Allocation ($)</label>
-              <div className="relative">
-                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                <input
-                  type="number"
-                  name="budget"
-                  required
-                  value={formData.budget}
-                  onChange={handleChange}
-                  placeholder="2500"
-                  className="w-full bg-slate-900 border border-slate-700 rounded-xl py-2.5 pl-9 pr-4 text-sm text-white focus:outline-none focus:border-brandTeal transition-colors"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5 font-mono">Target Deadline</label>
-              <div className="relative">
-                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                <input
-                  type="date"
-                  name="deadline"
-                  required
-                  value={formData.deadline}
-                  onChange={handleChange}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-xl py-2.5 pl-9 pr-4 text-sm text-white focus:outline-none focus:border-brandTeal transition-colors appearance-none"
-                />
-              </div>
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5 font-mono">Short Synopsis (Grid View Summary)</label>
+          {/* Short Summary */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-slate-300">Short Summary</label>
             <input
               type="text"
               name="shortDescription"
-              required
-              maxLength={120}
               value={formData.shortDescription}
               onChange={handleChange}
-              placeholder="Provide a concise one-line summary of requirements..."
-              className="w-full bg-slate-900 border border-slate-700 rounded-xl py-2.5 px-4 text-sm text-white focus:outline-none focus:border-brandTeal transition-colors"
+              placeholder="Briefly state what you need in 1-2 sentences"
+              className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
             />
           </div>
 
-          <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5 font-mono">Complete Operational Brief (Full Scope)</label>
-            <div className="relative">
-              <FileText className="absolute left-3 top-3.5 w-4 h-4 text-slate-500" />
-              <textarea
-                name="fullDescription"
-                required
-                rows={5}
-                value={formData.fullDescription}
+          {/* Required Skills (Comma separated) */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-slate-300">Required Skills (Comma-separated)</label>
+            <input
+              type="text"
+              name="skills"
+              value={formData.skills}
+              onChange={handleChange}
+              placeholder="e.g. React, Node.js, TypeScript, Tailwind"
+              className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+            />
+          </div>
+
+          {/* Full Scope & AI Button */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium text-slate-300">Detailed Scope of Work</label>
+              <button
+                type="button"
+                onClick={handleGenerateAiScope}
+                disabled={isGeneratingAi}
+                className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-all disabled:opacity-50"
+              >
+                {isGeneratingAi ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                    Enhance Scope with AI
+                  </>
+                )}
+              </button>
+            </div>
+
+            {aiError && <p className="text-xs text-rose-400 mt-1">{aiError}</p>}
+
+            <textarea
+              name="fullDescription"
+              value={formData.fullDescription}
+              onChange={handleChange}
+              rows={8}
+              placeholder="Provide full details or click 'Enhance Scope with AI' to auto-generate..."
+              required
+              className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-4 text-sm focus:ring-2 focus:ring-indigo-500 outline-none leading-relaxed font-mono"
+            />
+          </div>
+
+          {/* Budget & Deadline */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-300">Budget ($)</label>
+              <input
+                type="number"
+                name="budget"
+                value={formData.budget}
                 onChange={handleChange}
-                placeholder="Breakdown detailed workflows, system dependencies, milestones, and required developer tech stacks..."
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl py-2.5 pl-10 pr-4 text-sm text-white focus:outline-none focus:border-brandTeal transition-colors resize-none"
+                placeholder="500"
+                required
+                className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-300">Deadline</label>
+              <input
+                type="date"
+                name="deadline"
+                value={formData.deadline}
+                onChange={handleChange}
+                required
+                className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
               />
             </div>
           </div>
 
+          {/* Submit Button */}
           <button
             type="submit"
-            disabled={loading}
-            className="w-full bg-brandTeal hover:bg-teal-600 disabled:bg-teal-800 disabled:cursor-not-allowed text-brandNavy font-bold py-3 rounded-xl flex items-center justify-center gap-2 mt-4 cursor-pointer transition-colors shadow-lg shadow-brandTeal/5"
+            disabled={isSubmitting}
+            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3.5 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg disabled:opacity-50 cursor-pointer"
           >
-            {loading ? (
+            {isSubmitting ? (
               <Loader2 className="w-5 h-5 animate-spin" />
             ) : (
               <>
-                <PlusCircle className="w-4 h-4" />
-                <span>Publish Project to Pipeline</span>
+                Post Project <ArrowRight className="w-4 h-4" />
               </>
             )}
           </button>
         </form>
-
-      </main>
+      </div>
     </div>
   );
-}
+};

@@ -2,9 +2,9 @@ import React from "react";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import ExplorePage from "./pages/ExplorePage";
-import AddProjectPage from "./pages/AddProjectPage";
+// import AddProjectPage from "./pages/AddProjectPage";
 import ManageProjectsPage from "./pages/ManageProjectsPage";
-import DetailsPage from "./pages/DetailsPage";
+
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import MyBids from "./pages/MyBids";
@@ -12,6 +12,9 @@ import DevWorkspace from "./pages/DevWorkspace";
 
 import Footer from "./components/Footer";
 import Navbar from "./components/Navbar"; 
+import { Chatbot } from "./components/Chatbot";
+import { AddProjectPage } from "./pages/AddProjectPage";
+
 
 // Navigation and Layout Wrapper
 function AppLayout({ children }: { children: React.ReactNode }) {
@@ -26,6 +29,7 @@ function AppLayout({ children }: { children: React.ReactNode }) {
       {!isAuthPage && <Navbar />}
 
       <div className="flex-grow">{children}</div>
+      <Chatbot />
 
       
       {!isAuthPage && <Footer />}
@@ -42,7 +46,7 @@ export default function App() {
           <Route path="/explore" element={<ExplorePage />} />
           <Route path="/items/add" element={<AddProjectPage />} />
           <Route path="/dashboard" element={<ManageProjectsPage />} />
-          <Route path="/projects/:id" element={<DetailsPage />} />
+         
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/my-bids" element={<MyBids />} />

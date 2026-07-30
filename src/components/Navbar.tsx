@@ -83,7 +83,7 @@ export default function Navbar() {
             <span>Home</span>
           </Link>
 
-          <Link to="/projects" className="flex items-center gap-1.5 hover:text-teal-400 transition-colors">
+          <Link to="/explore" className="flex items-center gap-1.5 hover:text-teal-400 transition-colors">
             <Compass className="w-4 h-4 text-slate-400" />
             <span>Explore Projects</span>
           </Link>
@@ -91,7 +91,7 @@ export default function Navbar() {
           {/* CLIENT ONLY NAV ITEMS */}
           {user && user.role === 'client' && (
             <>
-              <Link to="/post-project" className="flex items-center gap-1.5 text-teal-400 font-semibold hover:text-teal-300 transition-colors">
+              <Link to="/items/add" className="flex items-center gap-1.5  font-semibold hover:text-teal-400 transition-colors">
                 <PlusCircle className="w-4 h-4" />
                 <span>Post Project</span>
               </Link>
@@ -111,7 +111,7 @@ export default function Navbar() {
                 <span>My Bids</span>
               </Link>
 
-              <Link to="/workspace" className="flex items-center gap-1.5 text-teal-400 font-semibold hover:text-teal-300 transition-colors">
+              <Link to="/workspace" className="flex items-center gap-1.5  font-semibold hover:text-teal-400 transition-colors">
                 <Terminal className="w-4 h-4" />
                 <span>Dev Workspace</span>
               </Link>

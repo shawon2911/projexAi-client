@@ -20,7 +20,7 @@ export default function LoginPage() {
 
     try {
      // Replace your login post line exactly with this:
-const response = await axios.post(`${API_BASE}/api/auth/register`, {
+const response = await axios.post(`${API_BASE}/auth/register`, {
   email,
   password
 });

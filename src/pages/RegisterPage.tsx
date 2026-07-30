@@ -23,7 +23,7 @@ export default function RegisterPage() {
     try {
      
 // Delete the import.meta.env line entirely and write it exactly like this:
-const response = await axios.post(`${API_BASE}/api/auth/register`, {
+const response = await axios.post(`${API_BASE}/auth/register`, {
   name,
   email,
   password,

@@ -47,7 +47,7 @@ export default function ExploreProjects() {
         <select
           value={category}
           onChange={(e) => setCategory(e.target.value)}
-          className="border p-3 rounded-lg w-full md:w-1/4"
+          className="border p-3 rounded-lg w-full md:w-1/4 bg-black"
         >
           <option value="All">All Categories</option>
           <option value="Web Development">Web Development</option>
