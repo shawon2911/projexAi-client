@@ -34,7 +34,7 @@ const response = await axios.post(`${API_BASE}/auth/register`, {
       localStorage.setItem('user', JSON.stringify(response.data.user));
 
       // Redirect directly to workspace dashboard
-      navigate('/dashboard');
+      navigate('/');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Registration routine failed.');
     } finally {

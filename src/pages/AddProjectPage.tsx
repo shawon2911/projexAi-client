@@ -145,7 +145,7 @@ export const AddProjectPage: React.FC = () => {
       alert('🎉 Project posted successfully!');
 
       // Redirect to Manage / My Projects page
-      navigate('/my-projects');
+      navigate('/explore');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to create project.';
       alert(`Error: ${errorMessage}`);
