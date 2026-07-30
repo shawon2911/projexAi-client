@@ -9,18 +9,20 @@ import MyBids from "./pages/MyBids";
 import DevWorkspace from "./pages/DevWorkspace";
 
 import Footer from "./components/Footer";
-import Navbar from "./components/Navbar"; 
+import Navbar from "./components/Navbar";
 import { Chatbot } from "./components/Chatbot";
 import { AddProjectPage } from "./pages/AddProjectPage";
 import { ManageProjectsPage } from "./pages/ManageProjectsPage";
 import ProjectDetailsPage from "./pages/ProjectDetailsPage";
-
+import { AboutPage } from "./pages/AboutPage";
+import { ContactPage } from "./pages/ContactPage";
 
 // Navigation and Layout Wrapper
 function AppLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
-  
-  const isAuthPage = location.pathname === "/login" || location.pathname === "/register";
+
+  const isAuthPage =
+    location.pathname === "/login" || location.pathname === "/register";
 
   return (
     <div className="flex flex-col min-h-screen justify-between">
@@ -47,11 +49,13 @@ export default function App() {
           <Route path="/manage-projects" element={<ManageProjectsPage />} />
           {/* <Route path="/dashboard" element={<ManageProjectsPage />} /> */}
           <Route path="/projects/:id" element={<ProjectDetailsPage />} />
-         
+
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/my-bids" element={<MyBids />} />
           <Route path="/workspace" element={<DevWorkspace />} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/contact" element={<ContactPage />} />
         </Routes>
       </AppLayout>
     </BrowserRouter>

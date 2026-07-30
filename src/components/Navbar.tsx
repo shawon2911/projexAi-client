@@ -88,6 +88,10 @@ export default function Navbar() {
             <span>Explore Projects</span>
           </Link>
 
+          <Link to="/about" className='hover:text-teal-400 transition-colors'>About Us</Link>
+
+          <Link to="/contact" className='hover:text-teal-400 transition-colors'>Contact</Link>
+
           {/* CLIENT ONLY NAV ITEMS */}
           {user && user.role === 'client' && (
             <>
